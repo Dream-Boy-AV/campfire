@@ -19,9 +19,18 @@ chip_names = ['blue', 'green', 'red', 'yellow']
 def game():
     level_init()
     while True:
+        # TODO: Define a movement availability checking function!
+        # TODO: Define a chip shuffling function!
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+            # TODO: Add function for MOUSEBUTTONDOWN!
+            ## TODO: For buttons to define respective functions, for chips to define choose function!
+            ### TODO: Add chip movement function with movements limitation!
+        # TODO: Add match checking function!
+        # TODO: Add movement cancel and matching functions!
+        # TODO: Add mission progress function!
+        # TODO: Winning and losing functions!
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -60,6 +69,8 @@ def level_init():
     cells_init(level, cell_image)
 
     chip_set(level)
+
+    # TODO: Add mission definition!
 
 
 def cells_init(level, cell_image):
