@@ -16,6 +16,25 @@ save = [line.rstrip('\n') for line in open('save_data.txt', 'r').readlines()]
 chip_names = ['blue', 'green', 'red', 'yellow']
 
 
+class Chip:
+    def __init__(self, name, coords, group):
+        self.name = name
+        self.image = pygame.transform.scale(load_image('icons\\chip_{}.png'.format(name)), (60, 60))
+        self.size = self.width, self.height = 60, 60
+        self.x, self.y = coords
+
+        self.sprite = pygame.sprite.Sprite(group)
+        self.sprite.image = self.image
+        self.sprite.rect = self.sprite.image.get_rect()
+        self.sprite.rect.x, self.sprite.rect.y = coords
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __str__(self):
+        return self.name
+
+
 def game():
     level_init()
     while True:
@@ -24,18 +43,25 @@ def game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            # TODO: Add function for MOUSEBUTTONDOWN!
-            ## TODO: For buttons to define respective functions, for chips to define choose function!
-            ### TODO: Add chip movement function with movements limitation!
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                ev_x, ev_y = event.pos
+                if pause.rect.x < ev_x < pause.rect.x + pause.rect.width and pause.rect.y < ev_y < pause.rect.y + pause.rect.height:
+                    pause_func()
+                elif hint.rect.x < ev_x < hint.rect.x + pause.rect.width and hint.rect.y < ev_y < hint.rect.y + pause.rect.height:
+                    hint_func()
+                # TODO: For chips to define choose function!
+            # TODO: Add chip movement function with movements limitation!
         # TODO: Add match checking function!
         # TODO: Add movement cancel and matching functions!
         # TODO: Add mission progress function!
+        # TODO: Add timer running function!
         # TODO: Winning and losing functions!
         pygame.display.flip()
         clock.tick(FPS)
 
 
 def level_init():
+    global hint, pause
     bcg = pygame.transform.scale(load_image('textures\\level_bcg.jpg'), SIZE)
     screen.blit(bcg, (0, 0))
 
@@ -74,7 +100,8 @@ def level_init():
     label = font.render('Mission', 1, pygame.Color('#F9F9E8'))
     screen.blit(label, ((210 - label.get_rect().width) // 2 + 114, 130))
 
-    goal = 'icons\\chip_{}.png'.format(random.choice(chip_names)) if gamemode == 1 else 'textures\\cell_closed.png'
+    goal = 'icons\\chip_{}.png'.format(random.choice(chip_names)) if gamemode == 1 \
+        else 'textures\\cell_closed.png'
     goal_image = pygame.transform.scale(load_image(goal), (77, 77))
     screen.blit(goal_image, ((210 - goal_image.get_rect().width) // 2 + 114, 180))
 
@@ -142,13 +169,8 @@ def chip_set(level):
                         chip_image = random.choice(chip_names)
                         cond3 = chip_list[ln - 2][pl] == chip_image
                         cond4 = chip_list[ln - 1][pl] == chip_image
-                list_line += [chip_image]
-                chip_sprite = pygame.sprite.Sprite(chips)
-                chip_sprite.image = \
-                    pygame.transform.scale(load_image('icons\\chip_{}.png'.format(chip_image)),
-                                           (60, 60))
-                chip_sprite.rect = chip_sprite.image.get_rect()
-                chip_sprite.rect.x, chip_sprite.rect.y = x, y
+                chip = Chip(chip_image, (x, y), chips)
+                list_line += [str(chip)]
             else:
                 list_line += [0]
             x += 81
@@ -157,6 +179,17 @@ def chip_set(level):
         chip_list += [list_line]
         ln += 1
     chips.draw(screen)
+
+
+def pause_func():
+    # TODO: Show the pause window!
+    print('pause')
+
+
+def hint_func():
+    # TODO: Show the hint!
+    print('hint')
+
 
 
 def terminate():
