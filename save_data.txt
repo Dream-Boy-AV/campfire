@@ -1,0 +1,4 @@
+level: 1
+music: 100
+sound: 100
+widescreen: No
