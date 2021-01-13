@@ -70,11 +70,25 @@ def level_init():
 
     chip_set(level)
 
-    # TODO: Add mission definition!
+    font = pygame.font.SysFont('impact', 42)
+    label = font.render('Mission', 1, pygame.Color('#F9F9E8'))
+    screen.blit(label, ((210 - label.get_rect().width) // 2 + 114, 130))
+
+    goal = 'icons\\chip_{}.png'.format(random.choice(chip_names)) if gamemode == 1 else 'textures\\cell_closed.png'
+    goal_image = pygame.transform.scale(load_image(goal), (77, 77))
+    screen.blit(goal_image, ((210 - goal_image.get_rect().width) // 2 + 114, 180))
+
+    count_text = '0/50' if gamemode == 1 else '0/{}'.format(str(cell_count))
+    counter = font.render(count_text, 1, pygame.Color('#F9F9E8'))
+    screen.blit(counter, ((210 - counter.get_rect().width) // 2 + 114, 260))
+
+    timer = font.render('03:00', 1, pygame.Color('#F9F9E8'))
+    screen.blit(timer, ((210 - timer.get_rect().width) // 2 + 114, 350))
 
 
 def cells_init(level, cell_image):
-    global cells
+    global cell_count
+    cell_count = 0
     cells = pygame.sprite.Group()
     y = 62
     for line in level:
@@ -85,6 +99,7 @@ def cells_init(level, cell_image):
                 cell.image = cell_image
                 cell.rect = cell.image.get_rect()
                 cell.rect.x, cell.rect.y = x, y
+                cell_count += 1
             x += 81
         y += 81
     cells.draw(screen)
@@ -130,8 +145,8 @@ def chip_set(level):
                 list_line += [chip_image]
                 chip_sprite = pygame.sprite.Sprite(chips)
                 chip_sprite.image = \
-                    pygame.transform.smoothscale(load_image('icons\\chip_{}.png'.format(chip_image)),
-                                                 (60, 60))
+                    pygame.transform.scale(load_image('icons\\chip_{}.png'.format(chip_image)),
+                                           (60, 60))
                 chip_sprite.rect = chip_sprite.image.get_rect()
                 chip_sprite.rect.x, chip_sprite.rect.y = x, y
             else:
@@ -152,7 +167,7 @@ def terminate():
 if __name__ == '__main__':
     pygame.init()
     pygame.display.set_caption('campfire')
-    pygame.display.set_icon(pygame.image.load('graphics/textures/icon.png'))
+    pygame.display.set_icon(load_image('textures\\icon.png'))
     screen = pygame.display.set_mode(SIZE)
     clock = pygame.time.Clock()
     game()
