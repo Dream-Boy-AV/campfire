@@ -184,8 +184,8 @@ def game():
                         if btn.rect.x < ev_x < btn.rect.x + btn.rect.width \
                                 and btn.rect.y < ev_y < btn.rect.y + btn.rect.height:
                             BTN_CLICK.play()
-                            # "Exit" button shows quiting dialog
                             if btn.function == 'exit':
+                                # "Exit" button shows quiting dialog
                                 popup_font = pygame.font.SysFont('impact', 56)
                                 message = popup_font.render('Do you really want to quit?',
                                                             1, pygame.Color('#F9F9E8'))
@@ -201,6 +201,7 @@ def game():
                                 menu = False
                                 exit_popup = True
                             elif btn.function == 'ng':
+                                # "New Game" button shows new game starting dialog
                                 popup_font = pygame.font.SysFont('impact', 50)
                                 message1 = popup_font.render(
                                     'Do you really want to start a new game?', 1,
@@ -226,8 +227,10 @@ def game():
                                 new_game = True
                                 odd_click = True
                             elif btn.function == 'cont':
+                                # "Continue" button starts gameplay level from savedata
                                 level_init()
                             elif btn.function == 'help':
+                                # "Help" button shows basics window
                                 popup_font = pygame.font.SysFont('impact', 24)
                                 heading = pygame.font.SysFont(
                                     'impact', 72).render('Help', 1, pygame.Color('#F9F9E8'))
@@ -269,6 +272,8 @@ def game():
                                 menu = False
                                 helping = True
                             elif btn.function == 'options':
+                                # "Options" button shows options window
+                                # TODO: Add options window!
                                 menu = False
                                 options = True
             if game_on:
