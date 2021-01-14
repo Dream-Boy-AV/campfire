@@ -2,6 +2,7 @@ import os
 import sys
 import random
 import pygame
+from pygame.locals import SRCALPHA
 
 
 def load_image(name):
@@ -14,7 +15,6 @@ def load_image(name):
 # Initializing Pygame
 pygame.init()
 pygame.display.set_caption('campfire')
-pygame.display.set_icon(load_image('textures\\icon.png'))
 
 # Constants:
 FPS = 50 # FPS value for animations
@@ -26,8 +26,20 @@ chip_names = ['blue', 'green', 'red', 'yellow'] # Names for chips to choose from
 game_on, menu = False, False # Interface determinants
 SCREEN = pygame.display.set_mode(SIZE) # Basic display
 DISPLAY_SURFACE = pygame.display.set_mode(SIZE) # Additional blank display
+FUNCTIONAL_SURFACE = pygame.Surface(SIZE, flags=SRCALPHA) # Functional display for pop-up windows
 BLANK = pygame.transform.scale(load_image('effects\\blank.png'), (70, 70)) # Blank texture
 clock = pygame.time.Clock()
+
+pygame.display.set_icon(load_image('textures\\icon.png'))
+
+# Pop-up window constants
+popup_image_size = (851, 488)
+yes_no_btn_size = (303, 133)
+done_btn_size = (242, 75)
+popup_image = pygame.transform.scale(load_image('textures\\pop-up_bcg.png'), popup_image_size)
+yes_btn = pygame.transform.scale(load_image('icons\\dia_btn_yes.png'), yes_no_btn_size)
+no_btn = pygame.transform.scale(load_image('icons\\dia_btn_no.png'), yes_no_btn_size)
+done_btn = pygame.transform.scale(load_image('icons\\options_done_btn.png'), done_btn_size)
 
 # Initializing chip containers and other global elements
 chips_list = []
@@ -147,12 +159,15 @@ class Chip:
 
 
 def game():
+    global menu, new_game, song
     # Base game function
 
     # Starting game with the main menu
+    song = pygame.mixer.Sound('sounds\\songs\\menu_song.mp3')
     main_menu()
     dx, dy = 0, 0
     chosen_chip = None
+    new_game, helping, options, exit_popup, odd_click = False, False, False, False, False
     while True:
         # TODO: Define a movement availability checking function!
         # TODO: Define a chip shuffling function!
@@ -169,11 +184,93 @@ def game():
                         if btn.rect.x < ev_x < btn.rect.x + btn.rect.width \
                                 and btn.rect.y < ev_y < btn.rect.y + btn.rect.height:
                             BTN_CLICK.play()
-                            # "Exit" button starts termination function
+                            # "Exit" button shows quiting dialog
                             if btn.function == 'exit':
-                                terminate()
-                            else:
-                                menu_func(btn.function)
+                                popup_font = pygame.font.SysFont('impact', 56)
+                                message = popup_font.render('Do you really want to quit?',
+                                                            1, pygame.Color('#F9F9E8'))
+
+                                FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
+                                FUNCTIONAL_SURFACE.blit(yes_btn, (366, 401))
+                                FUNCTIONAL_SURFACE.blit(no_btn, (698, 401))
+                                FUNCTIONAL_SURFACE.blit(message,
+                                                        ((850 - message.get_rect().width) // 2
+                                                         + 263, 220))
+                                SCREEN.blit(FUNCTIONAL_SURFACE, (0, 0))
+
+                                menu = False
+                                exit_popup = True
+                            elif btn.function == 'ng':
+                                popup_font = pygame.font.SysFont('impact', 50)
+                                message1 = popup_font.render(
+                                    'Do you really want to start a new game?', 1,
+                                    pygame.Color('#F9F9E8'))
+
+                                message2 = popup_font.render(
+                                    '(All the current progress will be lost!)', 1,
+                                    pygame.Color('#F9F9E8'))
+
+                                FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
+                                FUNCTIONAL_SURFACE.blit(yes_btn, (366, 401))
+                                FUNCTIONAL_SURFACE.blit(no_btn, (698, 401))
+                                FUNCTIONAL_SURFACE.blit(message1,
+                                                        ((850 - message1.get_rect().width) // 2
+                                                         + 263, 220))
+
+                                FUNCTIONAL_SURFACE.blit(message2,
+                                                        ((850 - message2.get_rect().width) // 2
+                                                         + 263, 280))
+                                SCREEN.blit(FUNCTIONAL_SURFACE, (0, 0))
+
+                                menu = False
+                                new_game = True
+                                odd_click = True
+                            elif btn.function == 'cont':
+                                level_init()
+                            elif btn.function == 'help':
+                                popup_font = pygame.font.SysFont('impact', 24)
+                                heading = pygame.font.SysFont(
+                                    'impact', 72).render('Help', 1, pygame.Color('#F9F9E8'))
+
+                                FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
+                                FUNCTIONAL_SURFACE.blit(done_btn, (569, 527))
+                                FUNCTIONAL_SURFACE.blit(heading,
+                                                        ((850 - heading.get_rect().width) // 2
+                                                         + 263, 150))
+
+                                im1 = pygame.transform.scale(load_image('textures\\help1.jpg'),
+                                                             (175, 113))
+                                FUNCTIONAL_SURFACE.blit(im1, (293, 240))
+
+                                im2 = pygame.transform.scale(load_image('textures\\help2.jpg'),
+                                                             (132, 182))
+                                FUNCTIONAL_SURFACE.blit(im2, (293, 360))
+
+                                im3 = pygame.transform.scale(load_image('textures\\help3.jpg'),
+                                                             (121, 153))
+                                FUNCTIONAL_SURFACE.blit(im3, (650, 360))
+
+                                text = ['campfire is a match-3 game. Match 3 or more ',
+                                        'identical figures on the field to complete the mission.',
+                                        'When the mission is',
+                                        'complete, you will', 'finish the level.',
+                                        'But if the timer ', 'runs out, you lose.',
+                                        'Use the hint button in', 'a tight spot and the ',
+                                        'pause button to pause the game.', 'Have fun!']
+                                text_pos = [(480, 250), (480, 300), (440, 360), (440, 390),
+                                            (440, 420), (440, 450), (440, 480), (780, 360),
+                                            (780, 390), (780, 420), (780, 450)]
+                                for i in range(len(text)):
+                                    surf = popup_font.render(text[i], 1, pygame.Color('#F9F9E8'))
+                                    FUNCTIONAL_SURFACE.blit(surf, text_pos[i])
+
+                                SCREEN.blit(FUNCTIONAL_SURFACE, (0, 0))
+
+                                menu = False
+                                helping = True
+                            elif btn.function == 'options':
+                                menu = False
+                                options = True
             if game_on:
                 # if user is playing a level
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -222,6 +319,40 @@ def game():
                         chosen_chip.choose()
                         chosen_chip.set_original_pos()
                     chosen_chip = None
+            if exit_popup:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    ev_x, ev_y = event.pos
+                    if 366 < ev_x < 366 + yes_no_btn_size[0] \
+                            and 401 < ev_y < 401 + yes_no_btn_size[1]:
+                        BTN_CLICK.play()
+                        terminate()
+                    elif 698 < ev_x < 698 + yes_no_btn_size[0] \
+                            and 401 < ev_y < 401 + yes_no_btn_size[1]:
+                        BTN_CLICK.play()
+                        exit_popup = False
+                        main_menu()
+            if new_game:
+                if odd_click:
+                    odd_click = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    ev_x, ev_y = event.pos
+                    if 366 < ev_x < 366 + yes_no_btn_size[0] \
+                            and 401 < ev_y < 401 + yes_no_btn_size[1]:
+                        BTN_CLICK.play()
+                        newgame()
+                    elif 698 < ev_x < 698 + yes_no_btn_size[0] \
+                            and 401 < ev_y < 401 + yes_no_btn_size[1]:
+                        BTN_CLICK.play()
+                        new_game = False
+                        main_menu()
+            if helping:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    ev_x, ev_y = event.pos
+                    if 569 < ev_x < 569 + yes_no_btn_size[0] \
+                            and 527 < ev_y < 527 + yes_no_btn_size[1]:
+                        BTN_CLICK.play()
+                        helping = False
+                        main_menu()
         # TODO: Add match checking function!
         # TODO: Add movement cancel and matching functions!
         # TODO: Add mission progress function!
@@ -280,8 +411,12 @@ def main_menu():
     ext.function = 'exit'
     menu_buttons.draw(SCREEN)
 
+    coryright = pygame.font.SysFont('comic sans ms', 14).render('campfire by Dream Boy (c) 2021',
+                                                                1, pygame.Color('#F9F9E8'))
+    SCREEN.blit(coryright, (1150, 745))
+
     # Initializing main menu music
-    song = pygame.mixer.Sound('sounds\\songs\\menu_song.mp3')
+    song.stop()
     song.play(-1)
 
 
@@ -443,21 +578,6 @@ def chip_set(level):
     chips.draw(DISPLAY_SURFACE)
 
 
-def menu_func(name):
-    # Method to decide the function of clicked menu button
-    if name == 'ng':
-        # TODO: Add new game dialog!
-        pass
-    elif name == 'cont':
-        level_init()
-    elif name == 'help':
-        # TODO: Add help window!
-        pass
-    elif name == 'options':
-        # TODO: Add options window!
-        pass
-
-
 def level_blit():
     # Function to draw gameplay level
     global chips, cells
@@ -500,6 +620,17 @@ def pause_func():
 def hint_func():
     # TODO: Show the hint!
     pass
+
+
+def newgame():
+    global new_game, save
+    with open('save_data.txt', 'w') as savedata:
+        data = 'level: 1\ntype: None\nmusic: 100\nsound: 100\nwidescreen: No'
+        savedata.write(data)
+    save = [line.rstrip('\n') for line in open('save_data.txt', 'r').readlines()]
+    new_game = False
+    level_init()
+
 
 
 def terminate():
