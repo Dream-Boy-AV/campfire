@@ -1,4 +1,5 @@
 level: 1
+type: 5
 music: 100
 sound: 100
 widescreen: No
