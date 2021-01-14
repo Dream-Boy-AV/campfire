@@ -29,9 +29,11 @@ DISPLAY_SURFACE = pygame.display.set_mode(SIZE) # Additional blank display
 BLANK = pygame.transform.scale(load_image('effects\\blank.png'), (70, 70)) # Blank texture
 clock = pygame.time.Clock()
 
-# Initializing chip containers
+# Initializing chip containers and other global elements
 chips_list = []
 chips = pygame.sprite.Group()
+bcg, mission_screen, level_buttons = None, None, None
+font, lv, label, goal_image, count_text, counter, timer = None, None, None, None, None, None, None
 
 # Initializing sound system
 pygame.mixer.init()
@@ -57,15 +59,15 @@ class Chip:
         self.move_direction = None
         self.group = group
 
-        self.image = pygame.transform.scale(load_image('icons\\chip_{}.png'.format(self.name)),
-                                            (self.width, self.height))
+        self.image = load_image('icons\\chip_{}.png'.format(self.name))
+        self.sprite = pygame.sprite.Sprite(self.group)
+
         self.sprite_def()
         self.chosen = False
 
     def sprite_def(self):
         # Initializing chip sprite
-        self.sprite = pygame.sprite.Sprite(self.group)
-        self.sprite.image = self.image
+        self.sprite.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.sprite.rect = self.sprite.image.get_rect()
         self.sprite.rect.x, self.sprite.rect.y = self.x, self.y
 
@@ -91,6 +93,7 @@ class Chip:
             self.y += 2
         self.sprite_def()
         self.chosen = not self.chosen
+        CHIP_CLICK.play()
 
     def ischosen(self):
         # Method to check if this chip is chosen
@@ -98,7 +101,7 @@ class Chip:
 
     def move(self, x, y):
         # Method to visually move chip
-        if abs(self.original_coords[0] - x) < 81 and abs(self.original_coords[1] - y) < 81:
+        if abs(self.original_coords[0] - x) <= 81 and abs(self.original_coords[1] - y) <= 81:
             if not self.move_direction:
                 self.direction_def(x, y)
             elif self.move_direction == 'hor':
@@ -107,6 +110,10 @@ class Chip:
             elif self.move_direction == 'ver':
                 self.sprite.rect.y = y
                 self.y = y
+            elif self.move_direction == 'swap':
+                self.sprite.rect.x, self.sprite.rect.y = x, y
+                self.x,self.y = x, y
+                self.move_direction = None
 
     def direction_def(self, x, y):
         # Moving left or right
@@ -116,12 +123,13 @@ class Chip:
         elif abs(y - self.original_coords[1]) > abs(x - self.original_coords[0]):
             self.move_direction = 'ver'
 
-    def replace(self, other):
-        # Method to swap chips positions
-        self.move_direction = None
-        other.sprite.rect, self.sprite.rect = self.sprite.rect, other.sprite.rect
-        (other.x, other.y), (self.x, self.y) = (self.x, self.y), (other.x, other.y)
-        other.original_coords, self.original_coords = self.original_coords, other.original_coords
+    def prep_to_swap(self):
+        # Prepares chip to swap with other chip
+        self.move_direction = 'swap'
+
+    def set_orig(self, coord):
+        # Changes original coordinates for chip, setting a new start position for it
+        self.original_coords = coord
 
     def set_original_pos(self):
         # Returns chip to it's original position
@@ -139,7 +147,6 @@ class Chip:
 
 
 def game():
-    global chips
     # Base game function
 
     # Starting game with the main menu
@@ -159,7 +166,6 @@ def game():
                     ev_x, ev_y = event.pos
                     for btn in menu_buttons:
                         # if user clicks buttons, respective function starts
-                        # TODO: Redefine to point collide check
                         if btn.rect.x < ev_x < btn.rect.x + btn.rect.width \
                                 and btn.rect.y < ev_y < btn.rect.y + btn.rect.height:
                             BTN_CLICK.play()
@@ -173,12 +179,10 @@ def game():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     ev_x, ev_y = event.pos
                     # Button clicks start respective functions
-                    # TODO: Redefine to point collide check
                     if pause.rect.x < ev_x < pause.rect.x + pause.rect.width \
                             and pause.rect.y < ev_y < pause.rect.y + pause.rect.height:
                         BTN_CLICK.play()
                         pause_func()
-                    # TODO: Redefine to point collide check
                     elif hint.rect.x < ev_x < hint.rect.x + pause.rect.width \
                             and hint.rect.y < ev_y < hint.rect.y + pause.rect.height:
                         BTN_CLICK.play()
@@ -190,8 +194,8 @@ def game():
                                     and chip.sprite.rect.y < ev_y < chip.sprite.rect.y \
                                             + chip.sprite.rect.height:
                                 chip.choose()
+                                chosen_chip = chip
                                 if chip.ischosen():
-                                    chosen_chip = chip
                                     dx, dy = event.pos[0] - chip.sprite.rect.x, \
                                              event.pos[1] - chip.sprite.rect.y
                                 else:
@@ -203,11 +207,13 @@ def game():
                     x, y = x - dx, y - dy
                     chosen_chip.move(x, y)
                     for chip in chips_list:
-                        if chip.sprite.rect.x < x < chip.sprite.rect.x + chip.sprite.rect.width \
-                                and chip.sprite.rect.y < y < chip.sprite.rect.y \
-                                        + chip.sprite.rect.height:
+                        # TODO: Redefine to point collide check
+                        if chip.sprite.rect.x < chosen_chip.sprite.rect.x < chip.sprite.rect.x \
+                                + chip.sprite.rect.width and chip.sprite.rect.y \
+                                < chosen_chip.sprite.rect.y < chip.sprite.rect.y \
+                                + chip.sprite.rect.height:
                             chosen_chip.choose()
-                            chosen_chip.replace(chip)
+                            replace(chosen_chip, chip)
                             chosen_chip = None
                             break
                 if event.type == pygame.MOUSEBUTTONUP:
@@ -221,8 +227,8 @@ def game():
         # TODO: Add mission progress function!
         # TODO: Add timer running function!
         # TODO: Winning and losing functions!
-
-        chips.draw(DISPLAY_SURFACE)
+        if game_on:
+            level_blit()
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -281,33 +287,33 @@ def main_menu():
 
 def level_init():
     global menu, game_on, hint, pause, song
+
     menu = False
     game_on = True
 
+    global bcg, mission_screen, level_buttons
+
     # Initializing background
     bcg = pygame.transform.scale(load_image('textures\\level_bcg.jpg'), SIZE)
-    SCREEN.blit(bcg, (0, 0))
 
     # Initializing mission screen
     mission_screen = pygame.transform.scale(load_image('textures\\mission_bcg.png'), (201, 422))
-    SCREEN.blit(mission_screen, (114, 51))
 
     # Initializing level buttons
-    buttons = pygame.sprite.Group()
+    level_buttons = pygame.sprite.Group()
     hint_image = pygame.transform.scale(load_image('icons\\level_hint_btn.png'), (94, 94))
-    hint = pygame.sprite.Sprite(buttons)
+    hint = pygame.sprite.Sprite(level_buttons)
     hint.image = hint_image
     hint.rect = hint.image.get_rect()
     hint.rect.x = 167
     hint.rect.y = 503
 
     pause_image = pygame.transform.scale(load_image('icons\\level_pause_btn.png'), (94, 94))
-    pause = pygame.sprite.Sprite(buttons)
+    pause = pygame.sprite.Sprite(level_buttons)
     pause.image = pause_image
     pause.rect = pause.image.get_rect()
     pause.rect.x = 167
     pause.rect.y = 612
-    buttons.draw(SCREEN)
 
     # Initializing level field
     if save[1][6:] == 'None':
@@ -334,30 +340,27 @@ def level_init():
     # Initializing chips
     chip_set(level)
 
+    global font, lv, label, goal_image, count_text, counter, timer
+
     # Initializing mission info
     # Level
     font = pygame.font.SysFont('impact', 42)
     lv = font.render('Level {}'.format(save[0][7:]), 1, pygame.Color('#F9F9E8'))
-    SCREEN.blit(lv, ((210 - lv.get_rect().width) // 2 + 114, 80))
 
     # Heading
     label = font.render('Mission', 1, pygame.Color('#F9F9E8'))
-    SCREEN.blit(label, ((210 - label.get_rect().width) // 2 + 114, 160))
 
     # Goal image
     goal = 'icons\\chip_{}.png'.format(random.choice(chip_names)) if gamemode == 1 \
         else 'textures\\cell_closed.png'
     goal_image = pygame.transform.scale(load_image(goal), (77, 77))
-    SCREEN.blit(goal_image, ((210 - goal_image.get_rect().width) // 2 + 114, 210))
 
     # Goal counter
     count_text = '0/50' if gamemode == 1 else '0/{}'.format(str(cell_count))
     counter = font.render(count_text, 1, pygame.Color('#F9F9E8'))
-    SCREEN.blit(counter, ((210 - counter.get_rect().width) // 2 + 114, 290))
 
     # Timer
     timer = font.render('03:00', 1, pygame.Color('#F9F9E8'))
-    SCREEN.blit(timer, ((210 - timer.get_rect().width) // 2 + 114, 380))
 
     # Initializing level theme depending on level number
     song.stop()
@@ -368,7 +371,7 @@ def level_init():
 
 
 def cells_init(level, cell_image):
-    global cell_count
+    global cell_count, cells
 
     # Function to initialize the field of cells
     cell_count = 0
@@ -453,6 +456,40 @@ def menu_func(name):
     elif name == 'options':
         # TODO: Add options window!
         pass
+
+
+def level_blit():
+    # Function to draw gameplay level
+    global chips, cells
+    global bcg, mission_screen, level_buttons
+    global font, lv, label, goal_image, count_text, counter, timer
+
+    SCREEN.blit(bcg, (0, 0))
+    SCREEN.blit(mission_screen, (114, 51))
+    level_buttons.draw(SCREEN)
+    cells.draw(SCREEN)
+    chips.draw(DISPLAY_SURFACE)
+    SCREEN.blit(lv, ((210 - lv.get_rect().width) // 2 + 114, 80))
+    SCREEN.blit(label, ((210 - label.get_rect().width) // 2 + 114, 160))
+    SCREEN.blit(goal_image, ((210 - goal_image.get_rect().width) // 2 + 114, 210))
+    SCREEN.blit(counter, ((210 - counter.get_rect().width) // 2 + 114, 290))
+    SCREEN.blit(timer, ((210 - timer.get_rect().width) // 2 + 114, 380))
+
+
+def replace(c1, c2):
+    # Function to swap chips positions
+    c1.prep_to_swap()
+    c2.prep_to_swap()
+
+    orig1, orig2 = c1.original_coords, c2.original_coords
+
+    c1.move(*orig2)
+    c2.move(*orig1)
+
+    c1.set_orig(orig2)
+    c2.set_orig(orig1)
+
+    level_blit()
 
 
 def pause_func():
