@@ -206,16 +206,16 @@ def game():
                     x, y = event.pos
                     x, y = x - dx, y - dy
                     chosen_chip.move(x, y)
+                    matching_chip_sprite = pygame.sprite.spritecollideany(chosen_chip.sprite, chips)
+                    matching_chip = None
                     for chip in chips_list:
-                        # TODO: Redefine to point collide check
-                        if chip.sprite.rect.x < chosen_chip.sprite.rect.x < chip.sprite.rect.x \
-                                + chip.sprite.rect.width and chip.sprite.rect.y \
-                                < chosen_chip.sprite.rect.y < chip.sprite.rect.y \
-                                + chip.sprite.rect.height:
-                            chosen_chip.choose()
-                            replace(chosen_chip, chip)
-                            chosen_chip = None
+                        if chip != chosen_chip and chip.sprite.rect == matching_chip_sprite.rect:
+                            matching_chip = chip
                             break
+                    if matching_chip:
+                        chosen_chip.choose()
+                        replace(chosen_chip, matching_chip)
+                        chosen_chip = None
                 if event.type == pygame.MOUSEBUTTONUP:
                     # Canceling the unfinished move
                     if chosen_chip:
