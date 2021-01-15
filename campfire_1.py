@@ -598,8 +598,8 @@ def main_menu():
     menu = True
 
     # Initializing background
-    bcg = pygame.transform.scale(load_image('textures\\main_menu_bcg.jpg'), SIZE)
-    SCREEN.blit(bcg, (0, 0))
+    menu_bcg = pygame.transform.scale(load_image('textures\\main_menu_bcg.jpg'), SIZE)
+    SCREEN.blit(menu_bcg, (0, 0))
 
     # Initializing logo
     logo = pygame.transform.scale(load_image('textures\\logo.png'), (854, 137))
@@ -614,11 +614,11 @@ def main_menu():
     ng.rect.x, ng.rect.y = 342, 433
     ng.function = 'ng'
 
-    cont = pygame.sprite.Sprite(menu_buttons)
-    cont.image = pygame.transform.scale(load_image('icons\\main_continue_btn.png'), MENU_BTN_SIZE)
-    cont.rect = cont.image.get_rect()
-    cont.rect.x, cont.rect.y = 722, 433
-    cont.function = 'cont'
+    menu_cont = pygame.sprite.Sprite(menu_buttons)
+    menu_cont.image = pygame.transform.scale(load_image('icons\\main_continue_btn.png'), MENU_BTN_SIZE)
+    menu_cont.rect = menu_cont.image.get_rect()
+    menu_cont.rect.x, menu_cont.rect.y = 722, 433
+    menu_cont.function = 'cont'
 
     hlp = pygame.sprite.Sprite(menu_buttons)
     hlp.image = pygame.transform.scale(load_image('icons\\main_help_btn.png'), MENU_BTN_SIZE)
@@ -632,11 +632,11 @@ def main_menu():
     opt.rect.x, opt.rect.y = 532, 577
     opt.function = 'options'
 
-    ext = pygame.sprite.Sprite(menu_buttons)
-    ext.image = pygame.transform.scale(load_image('icons\\main_exit_btn.png'), MENU_BTN_SIZE)
-    ext.rect = ng.image.get_rect()
-    ext.rect.x, ext.rect.y = 892, 577
-    ext.function = 'exit'
+    menu_ext = pygame.sprite.Sprite(menu_buttons)
+    menu_ext.image = pygame.transform.scale(load_image('icons\\main_exit_btn.png'), MENU_BTN_SIZE)
+    menu_ext.rect = ng.image.get_rect()
+    menu_ext.rect.x, menu_ext.rect.y = 892, 577
+    menu_ext.function = 'exit'
     menu_buttons.draw(SCREEN)
 
     coryright = pygame.font.SysFont('comic sans ms', 14).render('campfire by Dream Boy, 2021',
