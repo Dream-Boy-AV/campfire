@@ -44,7 +44,7 @@ done_btn = pygame.transform.scale(load_image('icons\\options_done_btn.png'), don
 # Initializing chip containers and other global elements
 chips_list = []
 chips = pygame.sprite.Group()
-lv, goal_image, count_text, counter, time, timer, dt = None, None, None, None, None, None, None
+lv, goal_image, count_text, counter, time, timer = None, None, None, None, None, None
 
 # background
 bcg = pygame.transform.scale(load_image('textures\\level_bcg.jpg'), SIZE)
@@ -105,6 +105,10 @@ RETURN_SND = pygame.mixer.Sound('sounds\\effects\\chip_return.mp3')
 START_SND = pygame.mixer.Sound('sounds\\effects\\game_start.mp3')
 WIN_SND = pygame.mixer.Sound('sounds\\effects\\win.mp3')
 FAIL_SND = pygame.mixer.Sound('sounds\\effects\\fail.mp3')
+
+# Initializing timer event
+timer_event = pygame.USEREVENT + 1
+pygame.time.set_timer(timer_event, 1000)
 
 
 class Chip:
@@ -206,7 +210,7 @@ class Chip:
 
 
 def game():
-    global menu, new_game, song, game_on, time_running, dt
+    global menu, new_game, song, game_on, time_running
     # Base game function
 
     # Starting game with the main menu
@@ -546,16 +550,20 @@ def game():
                         BTN_CLICK.play()
                         lev_exit = False
                         game_on = True
+            if event.type == timer_event:
+                if time_running:
+                    if time != '00:00':
+                        time_pass()
+                    else:
+                        pygame.time.set_timer(timer_event, 0)
+                        # TODO: Add losing function!
+
         # TODO: Add match checking function!
         # TODO: Add movement cancel and matching functions!
         # TODO: Add mission progress function!
         # TODO: Add winning function!
         # TODO: Next level function
         if game_on:
-            if time_running:
-                if time != '00:00':
-                    time_pass()
-                # TODO: Add losing function!
             level_blit()
         pygame.display.flip()
 
