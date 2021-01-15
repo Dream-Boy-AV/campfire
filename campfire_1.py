@@ -108,7 +108,6 @@ FAIL_SND = pygame.mixer.Sound('sounds\\effects\\fail.mp3')
 
 # Initializing timer event
 timer_event = pygame.USEREVENT + 1
-pygame.time.set_timer(timer_event, 1000)
 
 
 class Chip:
@@ -218,7 +217,7 @@ def game():
     dx, dy = 0, 0
     chosen_chip = None
     new_game, helping, options, exit_popup, odd_click = False, False, False, False, False
-    lev_pause, lev_options, lev_restart, lev_exit = False, False, False, False
+    lev_pause, lev_options, lev_restart, lev_exit, game_over = False, False, False, False, False
     while True:
         # TODO: Define a movement availability checking function!
         # TODO: Define a chip shuffling function!
@@ -239,13 +238,10 @@ def game():
                             BTN_CLICK.play()
                             if btn.function == 'exit':
                                 # "Exit" button shows quiting dialog
+                                form_dialogue('yes_no')
                                 popup_font = pygame.font.SysFont('impact', 56)
                                 message = popup_font.render('Do you really want to quit?',
                                                             1, pygame.Color('#F9F9E8'))
-
-                                FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
-                                FUNCTIONAL_SURFACE.blit(yes_btn, (366, 401))
-                                FUNCTIONAL_SURFACE.blit(no_btn, (698, 401))
                                 FUNCTIONAL_SURFACE.blit(message,
                                                         ((850 - message.get_rect().width) // 2
                                                          + 263, 220))
@@ -255,6 +251,7 @@ def game():
                                 exit_popup = True
                             elif btn.function == 'ng':
                                 # "New Game" button shows new game starting dialog
+                                form_dialogue('yes_no')
                                 popup_font = pygame.font.SysFont('impact', 50)
                                 message1 = popup_font.render(
                                     'Do you really want to start a new game?', 1,
@@ -264,9 +261,6 @@ def game():
                                     '(All the current progress will be lost!)', 1,
                                     pygame.Color('#F9F9E8'))
 
-                                FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
-                                FUNCTIONAL_SURFACE.blit(yes_btn, (366, 401))
-                                FUNCTIONAL_SURFACE.blit(no_btn, (698, 401))
                                 FUNCTIONAL_SURFACE.blit(message1,
                                                         ((850 - message1.get_rect().width) // 2
                                                          + 263, 220))
@@ -275,7 +269,6 @@ def game():
                                                         ((850 - message2.get_rect().width) // 2
                                                          + 263, 280))
                                 SCREEN.blit(FUNCTIONAL_SURFACE, (0, 0))
-
                                 menu = False
                                 new_game = True
                                 odd_click = True
@@ -284,12 +277,11 @@ def game():
                                 level_init()
                             elif btn.function == 'help':
                                 # "Help" button shows basics window
+                                form_dialogue()
                                 popup_font = pygame.font.SysFont('impact', 24)
                                 heading = pygame.font.SysFont(
                                     'impact', 72).render('Help', 1, pygame.Color('#F9F9E8'))
 
-                                FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
-                                FUNCTIONAL_SURFACE.blit(done_btn, (569, 527))
                                 FUNCTIONAL_SURFACE.blit(heading,
                                                         ((850 - heading.get_rect().width) // 2
                                                          + 263, 150))
@@ -325,12 +317,10 @@ def game():
                                 helping = True
                             elif btn.function == 'options':
                                 # "Options" button shows options window
+                                form_dialogue()
                                 popup_font = pygame.font.SysFont('impact', 48)
                                 heading = popup_font.render('Temporarily out of service!',
                                                             1, pygame.Color('#F9F9E8'))
-
-                                FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
-                                FUNCTIONAL_SURFACE.blit(done_btn, (569, 527))
                                 FUNCTIONAL_SURFACE.blit(heading,
                                                         ((850 - heading.get_rect().width) // 2
                                                          + 263, 150))
@@ -447,12 +437,10 @@ def game():
                             and 401 < ev_y < 401 + PAUSE_BTN_SIZE[1]:
                         BTN_CLICK.play()
                         # "Options" button shows options window
+                        form_dialogue()
                         popup_font = pygame.font.SysFont('impact', 48)
                         heading = popup_font.render('Temporarily out of service!',
                                                     1, pygame.Color('#F9F9E8'))
-
-                        FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
-                        FUNCTIONAL_SURFACE.blit(done_btn, (569, 527))
                         FUNCTIONAL_SURFACE.blit(heading, ((850 - heading.get_rect().width) // 2
                                                           + 263, 150))
 
@@ -463,16 +451,13 @@ def game():
                             and 401 < ev_y < 401 + PAUSE_BTN_SIZE[1]:
                         BTN_CLICK.play()
                         # "Restart" button shows restarting dialog
+                        form_dialogue('yes_no')
                         popup_font = pygame.font.SysFont('impact', 50)
                         message1 = popup_font.render('Do you really want to restart?', 1,
                                                      pygame.Color('#F9F9E8'))
 
                         message2 = popup_font.render('(All the current progress will be lost!)',
                                                      1, pygame.Color('#F9F9E8'))
-
-                        FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
-                        FUNCTIONAL_SURFACE.blit(yes_btn, (366, 401))
-                        FUNCTIONAL_SURFACE.blit(no_btn, (698, 401))
                         FUNCTIONAL_SURFACE.blit(message1, ((850 - message1.get_rect().width) // 2
                                                            + 263, 220))
 
@@ -486,6 +471,7 @@ def game():
                             and 401 < ev_y < 401 + PAUSE_BTN_SIZE[1]:
                         BTN_CLICK.play()
                         # "Exit" button shows dialog about returning to main menu
+                        form_dialogue('yes_no')
                         popup_font = pygame.font.SysFont('impact', 50)
                         message1 = popup_font.render('Do you really want to return', 1,
                                                      pygame.Color('#F9F9E8'))
@@ -494,10 +480,6 @@ def game():
 
                         message2 = popup_font.render('(All the current progress will be lost!)',
                                                      1, pygame.Color('#F9F9E8'))
-
-                        FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
-                        FUNCTIONAL_SURFACE.blit(yes_btn, (366, 401))
-                        FUNCTIONAL_SURFACE.blit(no_btn, (698, 401))
                         FUNCTIONAL_SURFACE.blit(message1, ((850 - message1.get_rect().width) // 2
                                                            + 263, 220))
 
@@ -550,14 +532,56 @@ def game():
                         BTN_CLICK.play()
                         lev_exit = False
                         game_on = True
+
             if event.type == timer_event:
                 if time_running:
                     if time != '00:00':
                         time_pass()
                     else:
+                        # Opens "You lost" pop-up window
                         pygame.time.set_timer(timer_event, 0)
-                        # TODO: Add losing function!
+                        song.stop()
+                        FAIL_SND.play()
+                        heading = pygame.font.SysFont('impact', 72).render(
+                            'You lost!', 1, pygame.Color('#F9F9E8'))
 
+                        FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
+                        FUNCTIONAL_SURFACE.blit(heading, ((850 - heading.get_rect().width) // 2
+                                                          + 263, 150))
+                        lose_btns = pygame.sprite.Group()
+                        los_restart = pygame.sprite.Sprite(lose_btns)
+                        los_restart.image = restart_image
+                        los_restart.rect = los_restart.image.get_rect()
+                        los_restart.rect.x, los_restart.rect.y = 533, 401
+
+                        los_ext = pygame.sprite.Sprite(lose_btns)
+                        los_ext.image = ext_image
+                        los_ext.rect = los_ext.image.get_rect()
+                        los_ext.rect.x, los_ext.rect.y = 700, 401
+                        lose_btns.draw(FUNCTIONAL_SURFACE)
+
+                        SCREEN.blit(FUNCTIONAL_SURFACE, (0, 0))
+
+                        game_on = False
+                        game_over = True
+
+            if game_over:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    ev_x, ev_y = event.pos
+                    if 533 < ev_x < 533 + PAUSE_BTN_SIZE[0] \
+                            and 401 < ev_y < 401 + PAUSE_BTN_SIZE[1]:
+                        FAIL_SND.stop()
+                        BTN_CLICK.play()
+                        # "Restart" button restarts level
+                        game_over = False
+                        level_init()
+                    elif 700 < ev_x < 700 + PAUSE_BTN_SIZE[0] \
+                            and 401 < ev_y < 401 + PAUSE_BTN_SIZE[1]:
+                        FAIL_SND.stop()
+                        BTN_CLICK.play()
+                        # "Exit" button returns to main menu
+                        game_over = False
+                        main_menu()
         # TODO: Add match checking function!
         # TODO: Add movement cancel and matching functions!
         # TODO: Add mission progress function!
@@ -632,6 +656,7 @@ def level_init():
     menu = False
     game_on = True
     time_running = True
+    pygame.time.set_timer(timer_event, 1000)
 
     # Initializing level field
     if save[1][6:] == 'None':
@@ -678,7 +703,9 @@ def level_init():
     song = pygame.mixer.Sound(
         'sounds\\songs\\level_song{}.mp3'.format(str(int(save[0][7:]) % 3 + 1)))
     song.play(-1)
-    # TODO: Add function for start label appearance!
+
+    # Start signal
+    START_SND.play()
 
 
 def cells_init(level, cell_image):
@@ -773,6 +800,15 @@ def level_blit():
     SCREEN.blit(goal_image, ((210 - goal_image.get_rect().width) // 2 + 114, 210))
     SCREEN.blit(counter, ((210 - counter.get_rect().width) // 2 + 114, 290))
     SCREEN.blit(timer, ((210 - timer.get_rect().width) // 2 + 114, 380))
+
+
+def form_dialogue(par=None):
+    FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
+    if par == 'yes_no':
+        FUNCTIONAL_SURFACE.blit(yes_btn, (366, 401))
+        FUNCTIONAL_SURFACE.blit(no_btn, (698, 401))
+    else:
+        FUNCTIONAL_SURFACE.blit(done_btn, (569, 527))
 
 
 def replace(c1, c2):
