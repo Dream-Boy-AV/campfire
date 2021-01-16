@@ -370,12 +370,15 @@ def game():
                     x, y = event.pos
                     x, y = x - dx, y - dy
                     chosen_chip.move(x, y)
-                    matching_chip_sprite = pygame.sprite.spritecollideany(chosen_chip.sprite, chips)
                     matching_chip = None
-                    for chip in chips_list:
-                        if chip != chosen_chip and chip.sprite.rect == matching_chip_sprite.rect:
-                            matching_chip = chip
-                            break
+                    match_list = pygame.sprite.spritecollide(chosen_chip.sprite, chips, False)
+                    if len(match_list) == 2:
+                        matching_chip_sprite = match_list[0] if match_list[0] != chosen_chip.sprite \
+                            else match_list[-1]
+                        for chip in chips_list:
+                            if chip != chosen_chip and chip.sprite.rect == matching_chip_sprite.rect:
+                                matching_chip = chip
+                                break
                     if matching_chip:
                         chosen_chip.choose()
                         replace(chosen_chip, matching_chip)
