@@ -636,7 +636,6 @@ def game():
                         finish = False
                         next_level() # Saving the game progress
                         main_menu() # Retunrning to main menu
-        # TODO: Add new chip appearing function!
         if game_on:
             level_blit()
         pygame.display.flip()
