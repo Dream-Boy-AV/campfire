@@ -21,7 +21,7 @@ FPS = 50 # FPS value for animations
 SIZE = WIDTH, HEIGHT = 1366, 768
 MENU_BTN_SIZE = 303, 95
 ## Saved level and options
-save = [line.rstrip('\n') for line in open('save_data.txt', 'r').readlines()]
+save = None
 chip_names = ['blue', 'green', 'red', 'yellow'] # Names for chips to choose from
 game_on, menu, time_running = False, False, False # Interface determinants
 SCREEN = pygame.display.set_mode(SIZE) # Basic display
@@ -115,7 +115,6 @@ FAIL_SND = pygame.mixer.Sound('sounds\\effects\\fail.mp3')
 
 # Initializing timer event
 timer_event = pygame.USEREVENT + 1
-
 
 class Chip:
     # Special class for playable chip on field.
@@ -339,7 +338,8 @@ def game():
             if game_on:
                 # if user is playing a level
                 check_matches()
-                if count_text[:count_text.find('/')] == count_text[count_text.find('/') + 1:]:
+                if int(count_text[:count_text.find('/')]) \
+                        >= int(count_text[count_text.find('/') + 1:]):
                     # Opens "You won" pop-up window
                         pygame.time.set_timer(timer_event, 0)
                         song.stop()
@@ -637,7 +637,6 @@ def game():
                         next_level() # Saving the game progress
                         main_menu() # Retunrning to main menu
         # TODO: Add new chip appearing function!
-        # TODO: Add chip falling function!
         if game_on:
             level_blit()
         pygame.display.flip()
@@ -701,22 +700,23 @@ def main_menu():
 
 
 def level_init():
-    global menu, game_on, time_running, song, gamemode
+    global save, menu, game_on, time_running, song, gamemode
     global lv, goal_name, goal_image, count_text, time
 
     menu = False
     game_on = True
     time_running = True
     pygame.time.set_timer(timer_event, 1000)
+    save = [line.rstrip('\n') for line in open('save_data.txt', 'r').readlines()]
 
     # Initializing level field
     if save[1][6:] == 'None':
-        n = random.randrange(8)
+        n = random.randrange(7)
         level = open('levels/type_{}.txt'.format(str(n), 'r')).readlines()
-        data = open('save_data.txt', 'r').read()
-        data = data[:15] + str(n) + data[19:]
+        data = [save[0], 'type: {}'.format(str(n))] + [line for line in save[2:] if line != '']
+        print(data)
         with open('save_data.txt', 'w') as savedata:
-            savedata.write(data)
+            savedata.write('\n'.join(data))
     else:
         level = open('levels/type_{}.txt'.format(save[1][6:]), 'r').readlines()
     level = [line.rstrip('\n').split() for line in level]
@@ -934,7 +934,7 @@ def check_matches():
 
 
 def delete_chips(to_delete):
-    global chips_list, cells
+    global chips_list, cells, chips
     deleted = []
     MATCH_SND.play()
     for chip in to_delete:
@@ -944,6 +944,8 @@ def delete_chips(to_delete):
                 if goal_name == str(chip):
                     mission_progress(1)
     for chip in deleted:
+        coords = chip.rect.x, chip.rect.y
+        new = Chip(random.choice(chip_names), coords, chips)
         if gamemode == 0:
             for cell in cells:
                 if (cell.rect.x + 9, cell.rect.y + 9) == (chip.rect.x, chip.rect.y) \
@@ -953,7 +955,7 @@ def delete_chips(to_delete):
                     break
         for c in range(len(chips_list)):
             if chips_list[c].sprite == chip:
-                del chips_list[c]
+                chips_list[c] = new
                 break
         chip.kill()
 
@@ -990,6 +992,7 @@ def time_pass():
 
 
 def next_level():
+    global save
     with open('save_data.txt', 'r') as sd:
         savedata = sd.readlines()
         level = int(savedata[0][7:]) + 1
@@ -997,6 +1000,7 @@ def next_level():
     with open('save_data.txt', 'w') as sd:
         to_write = 'level: {}\ntype: None\n{}'.format(str(level), '\n'.join(opt))
         sd.write(to_write)
+    save = [line.rstrip('\n') for line in open('save_data.txt', 'r').readlines()]
 
 
 def terminate():

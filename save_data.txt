@@ -1,5 +1,5 @@
-level: 1
-type: 4
+level: 2
+type: 5
 music: 100
 sound: 100
 widescreen: No
