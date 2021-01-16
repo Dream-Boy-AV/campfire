@@ -45,6 +45,9 @@ done_btn = pygame.transform.scale(load_image('icons\\options_done_btn.png'), don
 chips_list = []
 chips = pygame.sprite.Group()
 lv, goal_image, count_text, counter, time, timer, replaced = None, None, None, None, None, None, None
+goal_name = None
+cells = pygame.sprite.Group()
+gamemode = 0
 
 # background
 bcg = pygame.transform.scale(load_image('textures\\level_bcg.jpg'), SIZE)
@@ -92,6 +95,10 @@ ext = pygame.sprite.Sprite(pause_buttons)
 ext.image = ext_image
 ext.rect = ext.image.get_rect()
 ext.rect.x, ext.rect.y = 866, 401
+
+# Cell textures
+CLOSED_CELL = pygame.transform.scale(load_image('textures\\cell_closed.png'), (77, 77))
+OPENED_CELL = pygame.transform.scale(load_image('textures\\cell_opened.png'), (77, 77))
 
 # Initializing sound system
 pygame.mixer.init()
@@ -218,6 +225,7 @@ def game():
     chosen_chip = None
     new_game, helping, options, exit_popup, odd_click = False, False, False, False, False
     lev_pause, lev_options, lev_restart, lev_exit, game_over = False, False, False, False, False
+    finish = False
     while True:
         for event in pygame.event.get():
             # if user quits, termination function starts
@@ -331,6 +339,33 @@ def game():
             if game_on:
                 # if user is playing a level
                 check_matches()
+                if count_text[:count_text.find('/')] == count_text[count_text.find('/') + 1:]:
+                    # Opens "You won" pop-up window
+                        pygame.time.set_timer(timer_event, 0)
+                        song.stop()
+                        WIN_SND.play()
+                        heading = pygame.font.SysFont('impact', 72).render(
+                            'You won!', 1, pygame.Color('#F9F9E8'))
+
+                        FUNCTIONAL_SURFACE.blit(popup_image, (258, 140))
+                        FUNCTIONAL_SURFACE.blit(heading, ((850 - heading.get_rect().width) // 2
+                                                          + 263, 150))
+                        win_btns = pygame.sprite.Group()
+                        win_restart = pygame.sprite.Sprite(win_btns)
+                        win_restart.image = cont_image
+                        win_restart.rect = win_restart.image.get_rect()
+                        win_restart.rect.x, win_restart.rect.y = 533, 401
+
+                        win_ext = pygame.sprite.Sprite(win_btns)
+                        win_ext.image = ext_image
+                        win_ext.rect = win_ext.image.get_rect()
+                        win_ext.rect.x, win_ext.rect.y = 700, 401
+                        win_btns.draw(FUNCTIONAL_SURFACE)
+
+                        SCREEN.blit(FUNCTIONAL_SURFACE, (0, 0))
+
+                        game_on = False
+                        finish = True
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     ev_x, ev_y = event.pos
                     # Button clicks start respective functions
@@ -586,11 +621,23 @@ def game():
                         # "Exit" button returns to main menu
                         game_over = False
                         main_menu()
-        # TODO: Add mission progress function!
+            if finish:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    ev_x, ev_y = event.pos
+                    if 533 < ev_x < 533 + PAUSE_BTN_SIZE[0] \
+                            and 401 < ev_y < 401 + PAUSE_BTN_SIZE[1]:
+                        BTN_CLICK.play()
+                        finish = False
+                        next_level() # Saving the game progress
+                        level_init() # Continuing the game
+                    elif 700 < ev_x < 700 + PAUSE_BTN_SIZE[0] \
+                            and 401 < ev_y < 401 + PAUSE_BTN_SIZE[1]:
+                        BTN_CLICK.play()
+                        finish = False
+                        next_level() # Saving the game progress
+                        main_menu() # Retunrning to main menu
         # TODO: Add new chip appearing function!
         # TODO: Add chip falling function!
-        # TODO: Add winning function!
-        # TODO: Next level function
         if game_on:
             level_blit()
         pygame.display.flip()
@@ -654,8 +701,8 @@ def main_menu():
 
 
 def level_init():
-    global menu, game_on, time_running, song
-    global lv, goal_image, count_text, time
+    global menu, game_on, time_running, song, gamemode
+    global lv, goal_name, goal_image, count_text, time
 
     menu = False
     game_on = True
@@ -679,9 +726,9 @@ def level_init():
 
     # Initializing cells
     if gamemode == 1:
-        cell_image = pygame.transform.scale(load_image('textures\\cell_opened.png'), (77, 77))
+        cell_image = OPENED_CELL
     else:
-        cell_image = pygame.transform.scale(load_image('textures\\cell_closed.png'), (77, 77))
+        cell_image = CLOSED_CELL
     cells_init(level, cell_image)
 
     # Initializing chips
@@ -692,7 +739,8 @@ def level_init():
     lv = level_font.render('Level {}'.format(save[0][7:]), 1, pygame.Color('#F9F9E8'))
 
     # Goal image
-    goal = 'icons\\chip_{}.png'.format(random.choice(chip_names)) if gamemode == 1 \
+    goal_name = random.choice(chip_names)
+    goal = 'icons\\chip_{}.png'.format(goal_name) if gamemode == 1 \
         else 'textures\\cell_closed.png'
     goal_image = pygame.transform.scale(load_image(goal), (77, 77))
 
@@ -886,17 +934,37 @@ def check_matches():
 
 
 def delete_chips(to_delete):
-    global chips_list
+    global chips_list, cells
     deleted = []
+    MATCH_SND.play()
     for chip in to_delete:
         if chip.sprite not in deleted:
             deleted += [chip.sprite]
+            if gamemode == 1:
+                if goal_name == str(chip):
+                    mission_progress(1)
     for chip in deleted:
+        if gamemode == 0:
+            for cell in cells:
+                if (cell.rect.x + 9, cell.rect.y + 9) == (chip.rect.x, chip.rect.y) \
+                        and cell.image != OPENED_CELL:
+                    cell.image = OPENED_CELL
+                    mission_progress(1)
+                    break
         for c in range(len(chips_list)):
             if chips_list[c].sprite == chip:
                 del chips_list[c]
                 break
         chip.kill()
+
+
+def mission_progress(val):
+    global count_text
+
+    MISSION_SND.play()
+
+    count_text = str(int(count_text[:count_text.find('/')]) + val) \
+                 + count_text[count_text.find('/'):]
 
 
 def newgame():
@@ -919,6 +987,16 @@ def time_pass():
         while len(minutes) != 2:
             minutes = '0' + minutes
         time = time[:3] + minutes
+
+
+def next_level():
+    with open('save_data.txt', 'r') as sd:
+        savedata = sd.readlines()
+        level = int(savedata[0][7:]) + 1
+        opt = savedata[2:]
+    with open('save_data.txt', 'w') as sd:
+        to_write = 'level: {}\ntype: None\n{}'.format(str(level), '\n'.join(opt))
+        sd.write(to_write)
 
 
 def terminate():
