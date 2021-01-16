@@ -515,6 +515,7 @@ def game():
                             and 401 < ev_y < 401 + yes_no_btn_size[1]:
                         BTN_CLICK.play()
                         lev_restart = False
+                        time_running = True
                         game_on = True
             if lev_exit:
                 if odd_click:
@@ -531,6 +532,7 @@ def game():
                             and 401 < ev_y < 401 + yes_no_btn_size[1]:
                         BTN_CLICK.play()
                         lev_exit = False
+                        time_running = True
                         game_on = True
 
             if event.type == timer_event:
