@@ -641,6 +641,7 @@ def game():
         pygame.display.flip()
 
 
+
 def main_menu():
     # Function for main menu initialization
     global menu, menu_buttons, song
