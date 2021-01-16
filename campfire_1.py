@@ -44,7 +44,7 @@ done_btn = pygame.transform.scale(load_image('icons\\options_done_btn.png'), don
 # Initializing chip containers and other global elements
 chips_list = []
 chips = pygame.sprite.Group()
-lv, goal_image, count_text, counter, time, timer = None, None, None, None, None, None
+lv, goal_image, count_text, counter, time, timer, replaced = None, None, None, None, None, None, None
 
 # background
 bcg = pygame.transform.scale(load_image('textures\\level_bcg.jpg'), SIZE)
@@ -219,8 +219,6 @@ def game():
     new_game, helping, options, exit_popup, odd_click = False, False, False, False, False
     lev_pause, lev_options, lev_restart, lev_exit, game_over = False, False, False, False, False
     while True:
-        # TODO: Define a movement availability checking function!
-        # TODO: Define a chip shuffling function!
         for event in pygame.event.get():
             # if user quits, termination function starts
             if event.type == pygame.QUIT:
@@ -332,6 +330,7 @@ def game():
                                 odd_click = True
             if game_on:
                 # if user is playing a level
+                check_matches()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     ev_x, ev_y = event.pos
                     # Button clicks start respective functions
@@ -587,9 +586,9 @@ def game():
                         # "Exit" button returns to main menu
                         game_over = False
                         main_menu()
-        # TODO: Add match checking function!
-        # TODO: Add movement cancel and matching functions!
         # TODO: Add mission progress function!
+        # TODO: Add new chip appearing function!
+        # TODO: Add chip falling function!
         # TODO: Add winning function!
         # TODO: Next level function
         if game_on:
@@ -817,7 +816,18 @@ def form_dialogue(par=None):
 
 
 def replace(c1, c2):
+    global chips_list, replaced
+
+    replaced = c1, c2
     # Function to swap chips positions
+    x1, x2 = 0, 0
+    for c in range(len(chips_list)):
+        if chips_list[c].sprite == c1.sprite:
+            x1 = c
+        elif chips_list[c].sprite == c2.sprite:
+            x2 = c
+    chips_list[x1], chips_list[x2] = chips_list[x2], chips_list[x1]
+
     c1.prep_to_swap()
     c2.prep_to_swap()
 
@@ -830,6 +840,63 @@ def replace(c1, c2):
     c2.set_orig(orig1)
 
     level_blit()
+
+
+def check_matches():
+    global replaced
+
+    deleted = False
+    for chip in chips_list:
+        left_chip, right_chip, up_chip, down_chip = None, None, None, None
+        to_delete = []
+        for near_chip in chips_list:
+            if near_chip.sprite.rect != chip.sprite.rect:
+                if near_chip.sprite.rect.x == chip.sprite.rect.x:
+                    # Checking by y axis
+                    if near_chip.y == chip.y - 81 and near_chip == chip:
+                        up_chip = near_chip
+                    elif up_chip and near_chip.y == chip.y - 162 \
+                            and near_chip == chip:
+                        to_delete += [chip, up_chip, near_chip]
+                    elif near_chip.y == chip.y + 81 and near_chip == chip:
+                        down_chip = near_chip
+                    elif down_chip and near_chip.y == chip.y + 162 \
+                            and near_chip == chip:
+                        to_delete += [chip, down_chip, near_chip]
+                elif near_chip.y == chip.y:
+                    # Checking by x axis
+                    if near_chip.x == chip.x - 81 and near_chip == chip:
+                        left_chip = near_chip
+                    elif left_chip and near_chip.x == chip.x - 162 \
+                            and near_chip == chip:
+                        to_delete += [chip, left_chip, near_chip]
+                    elif near_chip.x == chip.x + 81 and near_chip == chip:
+                        right_chip = near_chip
+                    elif right_chip and near_chip.x == chip.x + 162 \
+                            and near_chip == chip:
+                        to_delete += [chip, right_chip, near_chip]
+        if to_delete:
+            delete_chips(to_delete)
+            deleted = True
+            replaced = False
+    if not deleted and replaced:
+        RETURN_SND.play()
+        replace(*replaced)
+        replaced = None
+
+
+def delete_chips(to_delete):
+    global chips_list
+    deleted = []
+    for chip in to_delete:
+        if chip.sprite not in deleted:
+            deleted += [chip.sprite]
+    for chip in deleted:
+        for c in range(len(chips_list)):
+            if chips_list[c].sprite == chip:
+                del chips_list[c]
+                break
+        chip.kill()
 
 
 def newgame():
