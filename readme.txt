@@ -11,7 +11,7 @@ c) randomly generated field completed with cells including chips of 4 different 
 	3) Green leaf
 	4) Blue axe
 
-Match 3 or more identical figures on the field to complete the mission. When the mission is complete, you will', 'finish the level.
+Match 3 or more identical figures on the field to complete the mission. When the mission is complete, you will finish the level.
 But if the timer runs out, you lose.
 Use the hint button in a tough situation and the pause button to pause the game.
 
