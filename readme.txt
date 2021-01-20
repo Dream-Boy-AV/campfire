@@ -4,7 +4,7 @@ Welcome to the "campfire" project!
 
 Game level interface includes:
 a) mission display with the timer
-b) "hint" and "pause" buttons
+b) "pause" buttons
 c) randomly generated field completed with cells including chips of 4 different types:
 	1) Red tent
 	2) Yellow campfire
